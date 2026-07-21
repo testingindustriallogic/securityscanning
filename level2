@@ -12,7 +12,7 @@ if (-not (Test-Path -LiteralPath $UpdaterScript)) {
 
 $taskRun = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"' + $UpdaterScript + '\"'
 
-$cmd = 'schtasks.exe /Create /SC MINUTE /MO 60 /TN "' + $TaskName + '" /TR "' + $taskRun + '" /RL HIGHEST /F'
+$cmd = 'schtasks.exe /Create /SC MINUTE /MO 60 /TN "' + $TaskName + '" /TR "' + $taskRun + '" /F'
 
 & cmd.exe /c $cmd
 
