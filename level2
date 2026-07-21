@@ -3,19 +3,6 @@ param(
     [string]$UpdaterScript = "C:\Temp\AppUpdaterTemp\AppUpdater.ps1"
 )
 
-# Self-elevate if not running as Administrator
-$currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
-$principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
-
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
-{
-    Start-Process powershell.exe `
-        -Verb RunAs `
-        -ArgumentList "-ExecutionPolicy Bypass -File `"$PSCommandPath`""
-
-    exit
-}
-
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -27,7 +14,9 @@ $taskRun = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"' + $Updat
 
 $cmd = 'schtasks.exe /Create /SC MINUTE /MO 5 /TN "' + $TaskName + '" /TR "' + $taskRun + '" /RL HIGHEST /F'
 
-& cmd.exe /c $cmd | Out-Null
+& cmd.exe /c $cmd
+
+Write-Host "Exit code: $LASTEXITCODE"
 
 if ($LASTEXITCODE -ne 0) {
     throw "Failed to create scheduled task ''$TaskName'' via schtasks.exe."
