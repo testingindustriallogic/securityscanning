@@ -1,4 +1,9 @@
-# Self-elevate if required
+param(
+    [string]$TaskName = "app updater",
+    [string]$UpdaterScript = "C:\Temp\AppUpdaterTemp\AppUpdater.ps1"
+)
+
+# Self-elevate if not running as Administrator
 $currentIdentity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = New-Object Security.Principal.WindowsPrincipal($currentIdentity)
 
@@ -11,11 +16,6 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
     exit
 }
 
-param(
-    [string]$TaskName = "app updater",
-    [string]$UpdaterScript = "C:\Temp\AppUpdaterTemp\AppUpdater.ps1"
-)
-
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
@@ -23,18 +23,12 @@ if (-not (Test-Path -LiteralPath $UpdaterScript)) {
     throw "Updater script not found: $UpdaterScript"
 }
 
-$taskRun = "powershell.exe -NoProfile -ExecutionPolicy Bypass -File `"$UpdaterScript`""
+$taskRun = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"' + $UpdaterScript + '\"'
 
-schtasks.exe /Create `
-    /SC MINUTE `
-    /MO 5 `
-    /TN $TaskName `
-    /TR $taskRun `
-    /RL HIGHEST `
-    /F
+$cmd = 'schtasks.exe /Create /SC MINUTE /MO 5 /TN "' + $TaskName + '" /TR "' + $taskRun + '" /RL HIGHEST /F'
+
+& cmd.exe /c $cmd | Out-Null
 
 if ($LASTEXITCODE -ne 0) {
-    throw "Failed to create scheduled task '$TaskName'. Exit code: $LASTEXITCODE"
+    throw "Failed to create scheduled task ''$TaskName'' via schtasks.exe."
 }
-
-Write-Host "Scheduled task '$TaskName' created successfully."
