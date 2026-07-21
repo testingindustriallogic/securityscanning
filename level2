@@ -1,0 +1,15 @@
+param(
+    [string]$TaskName = "app updater",
+    [string]$UpdaterScript = "C:\Temp\AppUpdaterTemp\AppUpdater.ps1"
+)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+if (-not (Test-Path -LiteralPath $UpdaterScript)) {
+    throw "Updater script not found: $UpdaterScript"
+}
+$taskRun = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File \"' + $UpdaterScript + '\"'
+$cmd = 'schtasks.exe /Create /SC MINUTE /MO 5 /TN "' + $TaskName + '" /TR "' + $taskRun + '" /F'
+& cmd.exe /c $cmd | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to create scheduled task '$TaskName' via schtasks.exe."
+}
